@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getPatients, createEmergencyCase } from '../api';
-import { Zap, ArrowLeft, Search, AlertTriangle, Info } from 'lucide-react';
+import { Zap, ArrowLeft, Search, AlertTriangle, User, MapPin, Building2, Droplets, CheckCircle } from 'lucide-react';
 import { useToast } from '../ToastContext';
 
-const PRIORITIES = ['EMERGENCY', 'URGENT', 'ROUTINE'];
+const PRIORITIES = [
+  { id: 'EMERGENCY', label: 'Emergency (Critical)', desc: 'Immediate emergency dispatch & high-priority resource reservation', color: 'var(--brand-red)' },
+  { id: 'URGENT', label: 'Urgent', desc: 'Accelerated transport and receiving facility coordination', color: 'var(--color-urgent)' },
+  { id: 'ROUTINE', label: 'Routine Transfer', desc: 'Standard non-critical medical transport between facilities', color: 'var(--color-slate)' },
+];
+
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const COMPONENTS = ['Whole Blood', 'Packed RBC', 'Platelets', 'Fresh Frozen Plasma', 'Cryoprecipitate'];
 
@@ -15,14 +20,13 @@ export default function CreateEmergencyCase() {
 
   const prefill = location.state || {};
 
-  const [step, setStep] = useState(1);
   const [patients, setPatients] = useState([]);
   const [pSearch, setPSearch] = useState(prefill.patient_name || '');
   const [selectedPatient, setSelectedPatient] = useState(
     prefill.patient_id ? { id: prefill.patient_id, full_name: prefill.patient_name } : null
   );
   const [form, setForm] = useState({
-    priority: 'URGENT',
+    priority: 'EMERGENCY',
     pickup_location: '',
     destination: '',
     blood_required: false,
@@ -45,8 +49,8 @@ export default function CreateEmergencyCase() {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = async () => {
-    if (!selectedPatient) { setErr('Please select a patient'); return; }
-    if (!form.pickup_location.trim()) { setErr('Pickup location is required'); return; }
+    if (!selectedPatient) { setErr('Please select a patient before proceeding'); return; }
+    if (!form.pickup_location.trim()) { setErr('Pickup location is required for ambulance routing'); return; }
     setSaving(true);
     setErr('');
     try {
@@ -61,7 +65,7 @@ export default function CreateEmergencyCase() {
         blood_units: form.blood_required ? parseInt(form.blood_units) : 0,
         notes: form.notes,
       });
-      toast(`Emergency case ${c.case_ref} created`, 'success');
+      toast(`Emergency coordination case ${c.case_ref} opened successfully`, 'success');
       navigate(`/emergency/${c.id}`);
     } catch (e) {
       setErr(e.message);
@@ -70,74 +74,106 @@ export default function CreateEmergencyCase() {
     }
   };
 
-  const priorityColors = {
-    EMERGENCY: { bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.4)', text: '#fca5a5' },
-    URGENT: { bg: 'rgba(249,115,22,0.1)', border: 'rgba(249,115,22,0.4)', text: '#fdba74' },
-    ROUTINE: { bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.4)', text: '#93c5fd' },
-  };
-
   return (
     <div>
       <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)}><ArrowLeft size={14} /></button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)} style={{ padding: '5px 10px' }}>
+            <ArrowLeft size={14} />
+          </button>
           <div>
-            <div className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Zap size={20} color="#ef4444" /> Create Emergency Coordination Case
+            <div className="page-title">
+              <Zap size={22} color="var(--brand-red)" strokeWidth={2.6} />
+              Open Emergency Coordination Case
             </div>
-            <div className="page-subtitle">Coordinate a patient emergency — ambulance, blood and facility.</div>
+            <div className="page-subtitle">Initiate synchronized response across ambulance fleet, blood banks and ICU beds.</div>
           </div>
         </div>
       </div>
 
       <div className="page-body">
-        <div className="alert alert-info mb-4" style={{ marginBottom: 20 }}>
-          <Info size={14} />
-          This creates a coordination case only. It does not replace calling emergency services (112). Ambulance and blood data shown is demo coordination information.
-        </div>
+        <div style={{ maxWidth: 720, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {err && (
+            <div className="alert alert-danger">
+              <AlertTriangle size={16} /> {err}
+            </div>
+          )}
 
-        <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {err && <div className="alert alert-danger"><AlertTriangle size={14} /> {err}</div>}
-
-          {/* Patient */}
+          {/* 1. Patient Selection */}
           <div className="card">
-            <div className="section-title mb-3" style={{ marginBottom: 14 }}>1. Select Patient</div>
+            <div className="section-title mb-3" style={{ marginBottom: 14 }}>
+              <User size={18} color="var(--color-slate)" strokeWidth={2.4} /> 1. Patient Identification
+            </div>
             {selectedPatient ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#60a5fa' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                background: 'var(--bg-secondary)',
+                border: '1.5px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '14px 18px'
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 'var(--radius-sm)',
+                  background: 'var(--color-slate)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 800, color: '#FFFFFF', fontSize: 16
+                }}>
                   {selectedPatient.full_name[0]}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{selectedPatient.full_name}</div>
-                  {selectedPatient.blood_group && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Blood: {selectedPatient.blood_group}</div>}
+                  <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 15 }}>
+                    {selectedPatient.full_name}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', fontWeight: 500 }}>
+                    Patient ID: #{selectedPatient.id} {selectedPatient.blood_group && <span className="font-bold" style={{ color: 'var(--brand-red)' }}>· Blood: {selectedPatient.blood_group}</span>}
+                  </div>
                 </div>
-                <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto' }} onClick={() => { setSelectedPatient(null); setPSearch(''); }}>
-                  Change
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ marginLeft: 'auto' }}
+                  onClick={() => { setSelectedPatient(null); setPSearch(''); }}
+                >
+                  Change Patient
                 </button>
               </div>
             ) : (
               <div>
-                <div className="search-wrap mb-2" style={{ marginBottom: 8 }}>
-                  <Search size={15} />
+                <div className="search-wrap" style={{ marginBottom: 8 }}>
+                  <Search size={16} />
                   <input
                     className="form-input search-input"
-                    placeholder="Search patient by name, phone…"
+                    placeholder="Search patient by name, phone or registration..."
                     value={pSearch}
                     onChange={e => { setPSearch(e.target.value); searchPatients(e.target.value); }}
                   />
                 </div>
                 {patients.length > 0 && (
-                  <div style={{ border: '1px solid var(--border-light)', borderRadius: 8, overflow: 'hidden' }}>
+                  <div style={{ border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--bg-card)' }}>
                     {patients.slice(0, 5).map(p => (
                       <div
                         key={p.id}
-                        onClick={() => { setSelectedPatient(p); setPatients([]); }}
-                        style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)', display: 'flex', gap: 10, alignItems: 'center' }}
+                        onClick={() => {
+                          setSelectedPatient(p);
+                          if (p.blood_group && !form.blood_group) set('blood_group', p.blood_group);
+                          setPatients([]);
+                        }}
+                        style={{
+                          padding: '12px 16px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid var(--border-light)',
+                          display: 'flex',
+                          gap: 10,
+                          alignItems: 'center'
+                        }}
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card-hover)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>{p.full_name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 'auto' }}>{p.blood_group} · {p.age}y</div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>{p.full_name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginLeft: 'auto', fontWeight: 600 }}>
+                          {p.blood_group ? <span style={{ color: 'var(--brand-red)' }}>{p.blood_group} · </span> : ''}{p.age ? `${p.age} yrs` : ''}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -146,101 +182,159 @@ export default function CreateEmergencyCase() {
             )}
           </div>
 
-          {/* Priority */}
+          {/* 2. Priority Classification */}
           <div className="card">
-            <div className="section-title mb-3" style={{ marginBottom: 14 }}>2. Coordination Priority</div>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div className="section-title mb-3" style={{ marginBottom: 14 }}>
+              <Zap size={18} color="var(--brand-red)" strokeWidth={2.4} /> 2. Priority Classification
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               {PRIORITIES.map(p => {
-                const colors = priorityColors[p];
-                const isSelected = form.priority === p;
+                const isSelected = form.priority === p.id;
                 return (
-                  <button
-                    key={p}
-                    onClick={() => set('priority', p)}
+                  <div
+                    key={p.id}
+                    onClick={() => set('priority', p.id)}
                     style={{
-                      flex: 1, padding: '12px 8px', borderRadius: 10, cursor: 'pointer', border: `2px solid ${isSelected ? colors.border : 'var(--border-light)'}`,
-                      background: isSelected ? colors.bg : 'var(--bg-primary)', color: isSelected ? colors.text : 'var(--text-muted)',
-                      fontWeight: 700, fontSize: 13, transition: 'all 0.15s',
+                      background: isSelected ? 'var(--bg-secondary)' : 'var(--bg-card)',
+                      border: isSelected ? `2px solid ${p.color}` : '1.5px solid var(--border)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '14px 16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
                     }}
                   >
-                    {p}
-                  </button>
+                    <div style={{
+                      fontWeight: 800,
+                      fontSize: 13.5,
+                      color: isSelected ? p.color : 'var(--text-primary)',
+                      marginBottom: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span>{p.label}</span>
+                      {isSelected && <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.35, fontWeight: 500 }}>
+                      {p.desc}
+                    </div>
+                  </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Locations */}
+          {/* 3. Routing & Location */}
           <div className="card">
-            <div className="section-title mb-3" style={{ marginBottom: 14 }}>3. Location Details</div>
-            <div className="form-group">
-              <label className="form-label">Pickup Location *</label>
-              <input className="form-input" value={form.pickup_location} onChange={e => set('pickup_location', e.target.value)} placeholder="e.g. MG Road, Bengaluru" />
+            <div className="section-title mb-3" style={{ marginBottom: 14 }}>
+              <MapPin size={18} color="var(--color-slate)" strokeWidth={2.4} /> 3. Routing Details
             </div>
-            <div className="form-group">
-              <label className="form-label">Destination Facility (optional)</label>
-              <input className="form-input" value={form.destination} onChange={e => set('destination', e.target.value)} placeholder="e.g. Apollo Hospitals" />
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Pickup Location *</label>
+                <input
+                  className="form-input"
+                  placeholder="e.g. 14 MG Road, Indiranagar, Bengaluru"
+                  value={form.pickup_location}
+                  onChange={e => set('pickup_location', e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Destination Hospital (Optional)</label>
+                <input
+                  className="form-input"
+                  placeholder="e.g. Apollo Hospital, Jayanagar"
+                  value={form.destination}
+                  onChange={e => set('destination', e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Blood */}
+          {/* 4. Blood Coordination */}
           <div className="card">
-            <div className="section-title mb-3" style={{ marginBottom: 14 }}>4. Blood Requirement</div>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-              <button
-                onClick={() => set('blood_required', false)}
-                style={{ flex: 1, padding: '10px', borderRadius: 8, cursor: 'pointer', border: `2px solid ${!form.blood_required ? 'rgba(59,130,246,0.4)' : 'var(--border-light)'}`, background: !form.blood_required ? 'rgba(59,130,246,0.08)' : 'var(--bg-primary)', color: !form.blood_required ? '#93c5fd' : 'var(--text-muted)', fontWeight: 600, fontSize: 13 }}
-              >
-                No Blood Required
-              </button>
-              <button
-                onClick={() => set('blood_required', true)}
-                style={{ flex: 1, padding: '10px', borderRadius: 8, cursor: 'pointer', border: `2px solid ${form.blood_required ? 'rgba(239,68,68,0.4)' : 'var(--border-light)'}`, background: form.blood_required ? 'rgba(239,68,68,0.08)' : 'var(--bg-primary)', color: form.blood_required ? '#fca5a5' : 'var(--text-muted)', fontWeight: 600, fontSize: 13 }}
-              >
-                Blood Required
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.blood_required ? 14 : 0 }}>
+              <div className="section-title" style={{ margin: 0 }}>
+                <Droplets size={18} color="var(--color-plum)" strokeWidth={2.4} /> 4. Blood Coordination
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
+                <input
+                  type="checkbox"
+                  checked={form.blood_required}
+                  onChange={e => set('blood_required', e.target.checked)}
+                  style={{ width: 17, height: 17, cursor: 'pointer', accentColor: 'var(--brand-red)' }}
+                />
+                Require Emergency Blood Supply
+              </label>
             </div>
+
             {form.blood_required && (
-              <div className="grid-3">
+              <div className="grid-3" style={{ marginTop: 14 }}>
                 <div className="form-group">
                   <label className="form-label">Blood Group</label>
-                  <select className="form-select" value={form.blood_group} onChange={e => set('blood_group', e.target.value)}>
-                    <option value="">Select</option>
+                  <select
+                    className="form-select"
+                    value={form.blood_group}
+                    onChange={e => set('blood_group', e.target.value)}
+                  >
+                    <option value="">Select blood group</option>
                     {BLOOD_GROUPS.map(g => <option key={g}>{g}</option>)}
                   </select>
                 </div>
+
                 <div className="form-group">
                   <label className="form-label">Component</label>
-                  <select className="form-select" value={form.blood_component} onChange={e => set('blood_component', e.target.value)}>
+                  <select
+                    className="form-select"
+                    value={form.blood_component}
+                    onChange={e => set('blood_component', e.target.value)}
+                  >
                     {COMPONENTS.map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
+
                 <div className="form-group">
-                  <label className="form-label">Units Required</label>
-                  <input className="form-input" type="number" min={1} max={20} value={form.blood_units} onChange={e => set('blood_units', e.target.value)} />
+                  <label className="form-label">Units Needed</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={form.blood_units}
+                    onChange={e => set('blood_units', e.target.value)}
+                  />
                 </div>
               </div>
             )}
           </div>
 
-          {/* Notes */}
+          {/* 5. Incident Notes */}
           <div className="card">
-            <div className="section-title mb-3" style={{ marginBottom: 14 }}>5. Administrative Notes</div>
-            <textarea
-              className="form-textarea"
-              value={form.notes}
-              onChange={e => set('notes', e.target.value)}
-              placeholder="Additional coordination notes (not medical advice)…"
-              rows={3}
-            />
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Operational &amp; Incident Notes</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Details of incident, chief medical complaint, specific equipment requirements..."
+                value={form.notes}
+                onChange={e => set('notes', e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* Submit */}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="btn btn-secondary" onClick={() => navigate(-1)}>Cancel</button>
-            <button className="btn btn-danger btn-lg" onClick={handleSubmit} disabled={saving} style={{ flex: 1 }}>
-              <Zap size={16} />
-              {saving ? 'Creating Case…' : 'Create Emergency Coordination Case'}
+          {/* Action Bar */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 4 }}>
+            <button className="btn btn-secondary" onClick={() => navigate(-1)}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary btn-lg"
+              onClick={handleSubmit}
+              disabled={saving}
+            >
+              <Zap size={18} strokeWidth={2.4} />
+              {saving ? 'Opening Case…' : 'Open Emergency Coordination Case'}
             </button>
           </div>
         </div>

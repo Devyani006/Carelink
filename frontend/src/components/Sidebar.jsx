@@ -1,51 +1,51 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Calendar, Zap, Ambulance,
-  Droplets, Building2, BarChart3, Heart, Shield
+  Droplets, Building2, BarChart3, Activity, ArrowLeft
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard', section: 'main' },
-  { to: '/patients', icon: Users, label: 'Patients', section: 'main' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', section: 'main' },
+  { to: '/patients', icon: Users, label: 'Patient Directory', section: 'main' },
   { to: '/appointments', icon: Calendar, label: 'Appointments', section: 'main' },
-  { to: '/emergency', icon: Zap, label: 'Command Center', section: 'emergency', emergency: true },
-  { to: '/ambulance', icon: Ambulance, label: 'Ambulance', section: 'emergency' },
+  { to: '/emergency', icon: Zap, label: 'Command Center', section: 'emergency', emergency: true, badge: 'OPS' },
+  { to: '/ambulance', icon: Ambulance, label: 'Ambulance Dispatch', section: 'emergency' },
   { to: '/blood', icon: Droplets, label: 'Blood Coordination', section: 'emergency' },
-  { to: '/facilities', icon: Building2, label: 'Facilities', section: 'emergency' },
-  { to: '/analytics', icon: BarChart3, label: 'Analytics', section: 'reports' },
+  { to: '/facilities', icon: Building2, label: 'Hospital Facilities', section: 'emergency' },
+  { to: '/analytics', icon: BarChart3, label: 'Operations Analytics', section: 'reports' },
 ];
 
 export default function Sidebar() {
   return (
     <aside className="sidebar">
-      {/* Logo */}
+      {/* Red CareLink Brand Header */}
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">
-          <Heart size={18} color="white" />
+          <Activity size={22} strokeWidth={2.4} />
         </div>
         <div>
           <div className="sidebar-logo-text">CareLink</div>
-          <div className="sidebar-logo-sub">Healthcare Coordination</div>
+          <div className="sidebar-logo-sub">Healthcare Ops</div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="sidebar-nav" style={{ paddingTop: 8 }}>
-        <div className="sidebar-section-label" style={{ marginTop: 8 }}>Overview</div>
+      {/* Navigation Links */}
+      <nav className="sidebar-nav">
+        <div className="sidebar-section-label">Main Console</div>
         {navItems
           .filter((n) => n.section === 'main')
           .map((item) => (
             <NavItem key={item.to} {...item} />
           ))}
 
-        <div className="sidebar-section-label" style={{ marginTop: 16 }}>Emergency Ops</div>
+        <div className="sidebar-section-label">Emergency Operations</div>
         {navItems
           .filter((n) => n.section === 'emergency')
           .map((item) => (
             <NavItem key={item.to} {...item} />
           ))}
 
-        <div className="sidebar-section-label" style={{ marginTop: 16 }}>Reports</div>
+        <div className="sidebar-section-label">Intelligence</div>
         {navItems
           .filter((n) => n.section === 'reports')
           .map((item) => (
@@ -53,46 +53,43 @@ export default function Sidebar() {
           ))}
       </nav>
 
-      {/* Bottom disclaimer */}
+      {/* Understated Operations Status footer */}
       <div
         style={{
-          padding: '12px 16px',
+          padding: '14px 16px',
           borderTop: '1px solid var(--border-light)',
           marginTop: 'auto',
+          background: 'var(--bg-card)',
         }}
       >
-        <div
-          style={{
-            background: 'rgba(239, 68, 68, 0.06)',
-            border: '1px solid rgba(239, 68, 68, 0.15)',
-            borderRadius: 8,
-            padding: '8px 10px',
-            display: 'flex',
-            gap: 8,
-            alignItems: 'flex-start',
-          }}
-        >
-          <Shield size={12} style={{ color: '#fca5a5', marginTop: 1, flexShrink: 0 }} />
-          <p style={{ fontSize: 10, color: '#fca5a5', lineHeight: 1.5 }}>
-            Ambulance, blood &amp; facility data shown is demo coordination data only. Not live emergency services.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: 'var(--color-success)',
+              boxShadow: '0 0 0 2px rgba(44, 110, 70, 0.2)',
+              display: 'inline-block'
+            }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>System Live</span>
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--brand-red)', letterSpacing: 0.5 }}>ONLINE</span>
         </div>
       </div>
     </aside>
   );
 }
 
-function NavItem({ to, icon: Icon, label, emergency }) {
+function NavItem({ to, icon: Icon, label, emergency, badge }) {
   return (
     <NavLink
       to={to}
-      end={to === '/'}
       className={({ isActive }) =>
         `nav-item${emergency ? ' emergency' : ''}${isActive ? ' active' : ''}`
       }
     >
-      <Icon size={16} />
-      {label}
+      <Icon size={18} strokeWidth={2.2} className="nav-icon" />
+      <span>{label}</span>
+      {badge && <span className="nav-badge">{badge}</span>}
     </NavLink>
   );
 }

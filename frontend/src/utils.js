@@ -2,8 +2,8 @@
 export function priorityBadge(priority) {
   const map = {
     EMERGENCY: 'badge badge-red',
-    URGENT: 'badge badge-orange',
-    ROUTINE: 'badge badge-blue',
+    URGENT: 'badge badge-amber',
+    ROUTINE: 'badge badge-gray',
   };
   return map[priority] || 'badge badge-gray';
 }
@@ -14,10 +14,10 @@ export function caseStatusBadge(status) {
     CREATED: 'badge badge-gray',
     ACKNOWLEDGED: 'badge badge-blue',
     AMBULANCE_REQUESTED: 'badge badge-amber',
-    AMBULANCE_ASSIGNED: 'badge badge-amber',
-    EN_ROUTE: 'badge badge-orange',
-    ARRIVED: 'badge badge-orange',
-    TRANSFERRED: 'badge badge-teal',
+    AMBULANCE_ASSIGNED: 'badge badge-blue',
+    EN_ROUTE: 'badge badge-amber',
+    ARRIVED: 'badge badge-blue',
+    TRANSFERRED: 'badge badge-purple',
     RECEIVED: 'badge badge-purple',
     CLOSED: 'badge badge-green',
   };
@@ -28,9 +28,9 @@ export function caseStatusBadge(status) {
 export function apptStatusBadge(status) {
   const map = {
     BOOKED: 'badge badge-blue',
-    'CHECKED-IN': 'badge badge-teal',
+    'CHECKED-IN': 'badge badge-blue',
     WAITING: 'badge badge-amber',
-    'IN-CONSULTATION': 'badge badge-orange',
+    'IN-CONSULTATION': 'badge badge-purple',
     COMPLETED: 'badge badge-green',
     CANCELLED: 'badge badge-gray',
   };
@@ -42,8 +42,8 @@ export function ambStatusBadge(status) {
   const map = {
     REQUESTED: 'badge badge-amber',
     ASSIGNED: 'badge badge-blue',
-    EN_ROUTE: 'badge badge-orange',
-    ARRIVED: 'badge badge-teal',
+    EN_ROUTE: 'badge badge-amber',
+    ARRIVED: 'badge badge-blue',
     TRANSFERRED: 'badge badge-green',
     CANCELLED: 'badge badge-gray',
   };
@@ -55,8 +55,8 @@ export function bloodStatusBadge(status) {
   const map = {
     REQUESTED: 'badge badge-amber',
     SEARCHING: 'badge badge-blue',
-    MATCH_FOUND: 'badge badge-teal',
-    CONTACTED: 'badge badge-orange',
+    MATCH_FOUND: 'badge badge-blue',
+    CONTACTED: 'badge badge-amber',
     CONFIRMED: 'badge badge-purple',
     FULFILLED: 'badge badge-green',
     CANCELLED: 'badge badge-gray',
@@ -67,8 +67,8 @@ export function bloodStatusBadge(status) {
 // Format duration
 export function formatDuration(isoString) {
   if (!isoString) return '—';
-  const diff = Date.now() - new Date(isoString + 'Z').getTime();
-  const mins = Math.floor(diff / 60000);
+  const diff = Date.now() - new Date(isoString + (isoString.includes('Z') ? '' : 'Z')).getTime();
+  const mins = Math.max(0, Math.floor(diff / 60000));
   if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
   const rem = mins % 60;

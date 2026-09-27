@@ -22,13 +22,13 @@ export function ToastProvider({ children }) {
       <div className="toast-container">
         {toasts.map((t) => (
           <div key={t.id} className={`toast toast-${t.type}`}>
-            {t.type === 'success' && <CheckCircle size={16} color="#10b981" />}
-            {t.type === 'error' && <XCircle size={16} color="#ef4444" />}
-            {t.type === 'info' && <Info size={16} color="#3b82f6" />}
-            <span style={{ flex: 1, fontSize: 13 }}>{t.message}</span>
+            {t.type === 'success' && <CheckCircle size={15} color="var(--color-success)" />}
+            {t.type === 'error' && <XCircle size={15} color="var(--color-emergency)" />}
+            {t.type === 'info' && <Info size={15} color="var(--color-slate)" />}
+            <span style={{ flex: 1, fontSize: 13, color: '#F8F6F1' }}>{t.message}</span>
             <button
               onClick={() => removeToast(t.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#B2AAA0', padding: 0 }}
             >
               <X size={14} />
             </button>
