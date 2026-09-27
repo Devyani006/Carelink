@@ -3,7 +3,15 @@ import os
 from datetime import datetime, timedelta
 import random
 
-DB_PATH = os.environ.get("DB_PATH", "./carelink.db")
+def _resolve_db_path() -> str:
+    if os.environ.get("DB_PATH"):
+        return os.environ["DB_PATH"]
+    if os.environ.get("VERCEL"):
+        return "/tmp/carelink.db"
+    return "./carelink.db"
+
+
+DB_PATH = _resolve_db_path()
 
 
 async def get_db():
@@ -13,6 +21,9 @@ async def get_db():
 
 
 async def init_db():
+    db_dir = os.path.dirname(DB_PATH)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir, exist_ok=True)
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         await db.execute("PRAGMA foreign_keys = ON")

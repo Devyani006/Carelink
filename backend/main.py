@@ -44,6 +44,8 @@ app.add_middleware(
 # ─── Helper ───────────────────────────────────────────────────────────────────
 
 async def get_db():
+    if not os.path.exists(DB_PATH):
+        await init_db()
     db = await aiosqlite.connect(DB_PATH)
     db.row_factory = aiosqlite.Row
     await db.execute("PRAGMA foreign_keys = ON")
